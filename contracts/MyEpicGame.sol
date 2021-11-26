@@ -41,6 +41,10 @@ contract MyEpicGame is ERC721{
     // to store the owner of the NFT and reference it later.
     mapping(address => uint256) public nftHolders;
 
+    //Declaration of event for MintedNFT and AttackComplete
+    event CharacterNFTMinted(address sender, uint256 tokenId, uint256 characterIndex);
+    event AttackComplete(uint newBossHp, uint newPlayerHp);
+
     //Declaration of game boss (WONT BE A NFT. Boss will live on)
     struct BigBoss {
       string name;
@@ -133,6 +137,9 @@ contract MyEpicGame is ERC721{
 
     // Increment the tokenId for the next person that uses it.
     _tokenIds.increment();
+
+    //Emit for NFTMinted 
+    emit CharacterNFTMinted(msg.sender, newItemId, _characterIndex);
   }
 
   //Function used to get URI (JSON INFO) from our NFT
@@ -175,7 +182,7 @@ function attackBoss() public {
 
   // Get the state of the player's NFT.
   uint256 nftTokenIdOfPlayer = nftHolders[msg.sender]; //We get the tokenID (If user minted 3rd NFT -> nftHolders[msg.sener] = 3)
-  
+
   //Next line we use 'storage' to change global variables of hp for example. If we use 'memory' a local
   //copy will be created that only exists within the function.
   CharacterAttributes storage player = nftHolderAttributes[nftTokenIdOfPlayer]; //We load the attributes of our gotten tokenID character
@@ -214,6 +221,39 @@ function attackBoss() public {
   // Console for ease.
   console.log("Player attacked boss. New boss hp: %s", bigBoss.hp);
   console.log("Boss attacked player. New player hp: %s\n", player.hp);
+
+  //Emit of event
+  //This will allow to the update of the HP of our character without the need of reloading the page
+  emit AttackComplete(bigBoss.hp, player.hp);
   }
   
+  //We need to check if the user already have a minted NFT character
+  //If so, we retrieve the data of the character
+  //If not, we return an empty character (CharacterAttributes)
+  function checkIfUserHasNFT() public view returns (CharacterAttributes memory) {
+
+  // Get the tokenId of the user's character NFT
+  uint256 userNftTokenId = nftHolders[msg.sender];
+
+  // If the user has a tokenId in the map, return their character.
+  if (userNftTokenId > 0) { //Thats why we increment the tokenId when mint. To never have a character with Id = 0.
+    return nftHolderAttributes[userNftTokenId]; //Return struct with character data
+  }
+  // Else, return an empty character.
+  else {
+    CharacterAttributes memory emptyStruct;
+    return emptyStruct;
+   }
+}
+
+//To show every character in our frontend web3 page when choosing one for minting is needed
+function getAllDefaultCharacters() public view returns (CharacterAttributes[] memory) {
+  return defaultCharacters;
+}
+
+//Retrieve function for BigBoss (Remember BigBoss is not a NFT)
+function getBigBoss() public view returns (BigBoss memory) {
+  return bigBoss;
+}
+
 }
