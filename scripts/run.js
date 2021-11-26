@@ -2,11 +2,15 @@ const main = async () => {
     const gameContractFactory = await hre.ethers.getContractFactory('MyEpicGame');
     const gameContract = await gameContractFactory.deploy(
       ["Turtwig", "Chimchard", "Piplup"],       // Names
-      ["https://imgur.com/a/uzLpyFc", // Images
-      "https://imgur.com/a/AUU3Jmt", 
-      "https://imgur.com/a/3ZHEXSR"],
+      ["https://i.imgur.com/TPurhtm.png", // Images
+      "https://i.imgur.com/dOUPBvW.png", 
+      "https://i.imgur.com/ADWxerc.png"],
       [100, 300, 200],                    // HP values
-      [100, 150, 150]                       // Attack damage values
+      [100, 150, 150],                       // Attack damage values
+      "Darkray", // Boss name
+      "https://i.imgur.com/uXErRMw.png", // Boss image
+      10000, // Boss hp
+      50 // Boss attack damage
     );
     await gameContract.deployed();
     console.log("Contract deployed to:", gameContract.address);
@@ -15,6 +19,12 @@ const main = async () => {
     // We only have three characters.
     // an NFT w/ the character at index 2 of our array.
     txn = await gameContract.mintCharacterNFT(2);
+    await txn.wait();
+
+    txn = await gameContract.attackBoss();
+    await txn.wait();
+
+    txn = await gameContract.attackBoss();
     await txn.wait();
 
     // Get the value of the NFT's URI.

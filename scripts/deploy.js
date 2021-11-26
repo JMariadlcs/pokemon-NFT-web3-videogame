@@ -1,47 +1,48 @@
+//File used to compile and deploy our contract ALCHEMY ETHEREUM NETWORK 
+require("@nomiclabs/hardhat-waffle");
+const { hexStripZeros } = require("@ethersproject/bytes")
+
 const main = async () => {
-    const gameContractFactory = await hre.ethers.getContractFactory('MyEpicGame');
-    const gameContract = await gameContractFactory.deploy(                     
-      ["Turtwig", "Chimchard", "Piplup"], // Names
-      ["https://i.imgur.com/TPurhtm.png", // Images
-      "https://i.imgur.com/dOUPBvW.png", 
-      "https://i.imgur.com/ADWxerc.png"],
-      [100, 200, 300],                    
-      [100, 50, 25] ,
-                            
-    );
-    await gameContract.deployed();
-    console.log("Contract deployed to:", gameContract.address);
-  
-    
-    let txn;
-    txn = await gameContract.mintCharacterNFT(0);
-    await txn.wait();
-    console.log("Minted NFT #1");
-  
-    txn = await gameContract.mintCharacterNFT(1);
-    await txn.wait();
-    console.log("Minted NFT #2");
-  
-    txn = await gameContract.mintCharacterNFT(2);
-    await txn.wait();
-    console.log("Minted NFT #3");
-  
-    txn = await gameContract.mintCharacterNFT(1);
-    await txn.wait();
-    console.log("Minted NFT #4");
-  
-    console.log("Done deploying and minting!");
-  
-  };
-  
-  const runMain = async () => {
-    try {
-      await main();
-      process.exit(0);
-    } catch (error) {
-      console.log(error);
-      process.exit(1);
-    }
-  };
-  
-  runMain()
+  const gameContractFactory = await hre.ethers.getContractFactory('MyEpicGame');
+  const gameContract = await gameContractFactory.deploy(
+    ["Turtwig", "Chimchard", "Piplup"],       // Names
+    ["https://i.imgur.com/TPurhtm.png", // Images
+    "https://i.imgur.com/dOUPBvW.png", 
+    "https://i.imgur.com/ADWxerc.png"],
+    [100, 300, 200],                    // HP values
+    [100, 150, 150],                       // Attack damage values
+    "Darkray", // Boss name
+    "https://i.imgur.com/uXErRMw.png", // Boss image
+    10000, // Boss hp
+    50 // Boss attack damage
+  );
+
+  await gameContract.deployed();
+  console.log("Contract deployed to:", gameContract.address);
+
+  let txn;
+  // We only have three characters.
+  // an NFT w/ the character at index 2 of our array.
+  txn = await gameContract.mintCharacterNFT(2);
+  await txn.wait();
+
+  txn = await gameContract.attackBoss();
+  await txn.wait();
+
+  txn = await gameContract.attackBoss();
+  await txn.wait();
+
+  console.log("Done!");
+};
+
+const runMain = async () => {
+  try {
+    await main();
+    process.exit(0);
+  } catch (error) {
+    console.log(error);
+    process.exit(1);
+  }
+};
+
+runMain();

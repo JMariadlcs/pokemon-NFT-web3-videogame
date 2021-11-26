@@ -41,18 +41,50 @@ contract MyEpicGame is ERC721{
     // to store the owner of the NFT and reference it later.
     mapping(address => uint256) public nftHolders;
 
+    //Declaration of game boss (WONT BE A NFT. Boss will live on)
+    struct BigBoss {
+      string name;
+      string imageURI;
+      uint hp;
+      uint maxHp;
+      uint attackDamage;
+  } 
+
+  BigBoss public bigBoss;
+
+ 
+  // All the other character code is below here is the same as before, just not showing it to keep thing
+
   // Data passed in to the contract when it's first created initializing the characters.
   // We're going to actually pass these values in from from run.js.
   constructor(
     string[] memory characterNames,
     string[] memory characterImageURIs,
     uint[] memory characterHp,
-    uint[] memory characterAttackDmg
+    uint[] memory characterAttackDmg,
+    string memory bossName, // These new variables would be passed in via run.js or deploy.js.
+    //Boss atributes
+    string memory bossImageURI,
+    uint bossHp,
+    uint bossAttackDamage
 
     //Especial identifier and symbol for ERC721 attributes (like Ethereum and ETH)
   )
     ERC721("Pokemons", "POKEMON")
     {
+
+      //Boss initialization attributes. Saved to our global 'bigBoss' state variables.
+       bigBoss = BigBoss({
+      name: bossName,
+      imageURI: bossImageURI,
+      hp: bossHp,
+      maxHp: bossHp,
+      attackDamage: bossAttackDamage
+    });
+
+  console.log("Done initializing boss %s w/ HP %s, img %s", bigBoss.name, bigBoss.hp, bigBoss.imageURI);
+
+    //Other characters code
     for(uint i = 0; i < characterNames.length; i += 1) {
       defaultCharacters.push(CharacterAttributes({
         characterIndex: i,
@@ -134,4 +166,54 @@ contract MyEpicGame is ERC721{
   
   return output;
 }
+
+//FUNCTIONS TO INTERACT WITH OUR CHARACERS AND BOSS
+
+//The attackBoos() function works are following -> once excecuted 1 attack from character to boss and 
+// 1 attack from boss to character.
+function attackBoss() public {
+
+  // Get the state of the player's NFT.
+  uint256 nftTokenIdOfPlayer = nftHolders[msg.sender]; //We get the tokenID (If user minted 3rd NFT -> nftHolders[msg.sener] = 3)
+  
+  //Next line we use 'storage' to change global variables of hp for example. If we use 'memory' a local
+  //copy will be created that only exists within the function.
+  CharacterAttributes storage player = nftHolderAttributes[nftTokenIdOfPlayer]; //We load the attributes of our gotten tokenID character
+  console.log("\nPlayer w/ character %s about to attack. Has %s HP and %s AD", player.name, player.hp, player.attackDamage);
+  console.log("Boss %s has %s HP and %s AD", bigBoss.name, bigBoss.hp, bigBoss.attackDamage); //Atributes live on our contract. Dont have to load them
+
+  //For attacking we need to check HP from character and boss
+  // Make sure the player has more than 0 HP.
+  require (
+    player.hp > 0,
+    "Error: character must have HP to attack boss."
+  );
+
+  // Make sure the boss has more than 0 HP.
+  require (
+    bigBoss.hp > 0,
+    "Error: boss must have HP to attack boss."
+  );
+
+  //Hp attributes are uint256 types. We need to check if our attack is making a negative inpact (uint cannot be negative)
+  // Allow player to attack boss.
+  if (bigBoss.hp < player.attackDamage) {
+    bigBoss.hp = 0;
+  } else {
+    bigBoss.hp = bigBoss.hp - player.attackDamage;
+  }
+
+  //Also need to check when the boss is attacking our character
+   // Allow boss to attack player.
+  if (player.hp < bigBoss.attackDamage) {
+    player.hp = 0;
+  } else {
+    player.hp = player.hp - bigBoss.attackDamage;
+  }
+  
+  // Console for ease.
+  console.log("Player attacked boss. New boss hp: %s", bigBoss.hp);
+  console.log("Boss attacked player. New player hp: %s\n", player.hp);
+  }
+  
 }
